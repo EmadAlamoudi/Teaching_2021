@@ -737,27 +737,40 @@ quantile(mtcars$wt, c(0.05, 0.95))
 
 ## Empirical distributions
 
-We can easily create a histogram to visualize the empirical distribution with `hist()` (by default, the bin widths are automatically estimated).
+The empirical distribution of a data set assigns to each observed value a probability equal to the frequency at which it has been observed. By construction, it is always a discrete probability distribution. For example, if we observed the values $1, 4, 5, 1, 4, 4, 2$ then the empirical distribution would assign probability $2 / 7$ to the value $1$, probability $1/7$ to the values $2$ and $5$, probability $3/7$ to the value $4$ and no probability mass to all other values.
+
+The empirical cumulative distribution function can be similarly constructed: it is a function that, starting from zero, increases by the probability mass define as above each time it crosses one of the observed values, until it reaches one. It can be computed with `ecdf()` in R.
 ```{r}
-hist(mtcars$mpg)
+plot(ecdf(mtcars$cyl), do.points=FALSE, verticals=TRUE)
 ```
 
-If we want a smooth approximation using Kernel Density Estimation (KDE),
-the function `density()` can be used instead.
-```{r}
-hist(mtcars$mpg, freq=FALSE) # The histogram must represent densities to make it comparable to the KDE
-lines(density(mtcars$mpg, bw="SJ")) # bw -> bandwidth estimation method
-```
-
-The empirical cumulative distribution function can be computed with `ecdf()` instead.
+This works well when the data can only take a finite number of possible values, as the "cylinder" variable does in the above example. However, if the data can be an arbitrary real number (such as fuel-efficiency in the `mtcars` data set), then it will be highly unlikely that the same value occurs more than once in the data set and all values will consequently have the same probability mass! The ECDF still looks somewhat nice and useful, but it is not clear how to assign meaningful probability values to single observations. 
 ```{r}
 plot(ecdf(mtcars$mpg), do.points=FALSE, verticals=TRUE)
 ```
 
-As a final example, a quantile-quantile (Q-Q) plot can be used to compare the empirical distribution with a standard distribution. In the case a normal distribution is used for the comparison, the convenient shorthand `qqnorm()` can be used.
+A possible solution is to partition the set of possible values into a discrete number of non-overlapping subsets (such that observations falling in the same subset can be considered sufficiently similar to one another), substitute the observed values with the subset they belong to and then compute the empirical distribution. For example, if the possible range of values is the interval $[0,1]$ we could partition it into 4 sub-intervals $[0, 0.25]$, $[0.25, 0.5]$, $[0.5, 0.75]$ and $[0.75, 1]$, assigning every observation to one and only one of them. This process is called *binning* and can be done manually or automatically (note that the bins must not necessarily be of the same size). In R we can easily create a histogram to visualize a binned empirical distribution with `hist()` (by default, the bin widths are automatically estimated).
+```{r}
+# For each bin, plot the number of observation it contains
+hist(mtcars$mpg, freq=TRUE)
+```
+```{r}
+# For each bin, plot its probability mass:
+# the area of the bar is equal to (bin size) x (number of observations in the bin),
+# scaled by a factor that makes to sum of all bin areas equal to one.
+hist(mtcars$mpg, freq=FALSE)
+```
+
+Instead of using binning and plotting a histogram, there are methods to directly approximate the continuous probability density of the data. Such approximation has the advantage of being defined at every point of the support and of varying smoothly. The amount of smoothing applying (called *bandwith*) can be specified by the user or auto-detected. This procedure is called Kernel Density Estimation (KDE) and can be invoked in R with the `density()` function (consult <https://en.wikipedia.org/wiki/Kernel_density_estimation> for more details).
+```{r}
+hist(mtcars$mpg, freq=FALSE) # The histogram must represent probabilities to make it comparable to the KDE
+lines(density(mtcars$mpg, bw="SJ")) # bw -> bandwidth estimation method
+```
+
+As a final example, a quantile-quantile plot (Q-Q plot, <https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot>) can be used to compare the empirical distribution with a standard distribution. It plots the quantiles of one distribution against the quantiles of the other. If the two distributions have the same shape, then the quantiles will lie on a single line. The more they deviate from such a line the more the two distributions differ. Q-Q plots are a very useful graphical way to quickly compare distributions. In the case a normal distribution is used for the comparison, the convenient shorthand `qqnorm()` can be used.
 ```{r}
 qqnorm(mtcars$mpg)
-qqline(mtcars$mpg) # Show "diagonal" for making comparison clearer
+qqline(mtcars$mpg) # Show equal distributions case for making comparison clearer
 ```
 
 ## Linear regression
