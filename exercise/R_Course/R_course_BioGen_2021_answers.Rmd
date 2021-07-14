@@ -1,0 +1,983 @@
+---
+title: "R course"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+*A man asks his wife, who is a programmer, to go out for some groceries.*
+*He says "Honey, please get a bottle of milk, and if they have eggs, buy twelve." Half an hour later she returns, lugging 12 bottles of milk, and simply says "They had eggs".*
+
+The R Programming Language (or just R) is what is called an imperative programming language. This means that "code" is an iterative sequence of instructions which are executed in order. Since they are carried out mindlessly and without questioning, it falls to the programmer to ensure that code is both correct and readable (note that without the latter, it is completely impossible to ascertain the former).
+
+It combines the type safety of dynamically typed languages like Python (i.e. none at all) with the rich tools to shoot yourself in the foot of C (i.e. a *lot*). It features many pitfalls, baffling design decisions, and examples of surprising or ill-documented behaviour that make it a bad choice for producing code on a large scale. ["The R Inferno"](https://www.burns-stat.com/pages/Tutor/R_inferno.pdf), authored by Patrick Burns, cited by 44 according to Google Scholar, and brandishing the abstract "If you are using R and you think you’re in hell, this is a map for you.", spans 126 pages.
+
+It is also, however, the base of a very rich ecosystem of libraries and packages (i.e. tools that various researchers have collected and published over time), especially for biological and biomedical purposes. Additionally you will likely not build up large reusable codebases for the purposes of your work, and instead write mainly single-purpose scripts, which is precisely what R was made for and a purpose for which it excels.
+
+In the following, we will explore the first steps of working with R. Sections marked with an asterisk (*) contain additional information which is likely helpful but not necessary to proceed.
+
+## Assignment operators
+
+The first, and most basic, kind of instruction we can pass to an R program is a *variable assignment*. As its name suggests, a value is saved into a variable. These variables are saved in an *environment*, which contains all variables that are currently active, as well as other objects created by code, such as functions (more on that later). 
+
+```{r}
+a <- 2  # The variable a is created and set to 2
+print(a)
+```
+
+```{r}
+b <- a  # The variable b is set to be the value of a (i.e. 2)
+print(b)
+```
+Please note that if you change the value of a, then b will not be changed. A copy of a will be used by b and that will not be updated later. 
+
+In an assignment, the right side is always evaluated first, and then the value is assigned to the left variable. For that reason, the following is perfectly sensible:
+
+```{r}
+d <- 7  # The variable d is created and set to 7
+d <- d - 1  # The variable d is set to the value of d-1, i.e. 6
+print(d)
+```
+
+
+### Other assignment operators*
+
+Indeed, R is such a versatile language that it offers not one, not two, not three, not four, but __five__ different assignment operators.
+
+```{r}
+a2 = 1  # a2 is set to 1
+3 -> a3  # a3 is set to 3
+a4 <<- 4  # a4 is set to 4
+5 ->> a5  # a5 is set to 5
+print(c(a2, a3, a4, a5))  # c() collects elements into an array; It is only used for visual purposes here, a proper introduction will follow later
+```
+
+They will usually all behave the way you would like them to, however in very special edge cases will suddenly break down in such specific and impossible-to-diagnose ways that Google recommends its engineers to never use the `=` operator for assignment at all (much to the chagrin of Yours Truly, since this is a major syntactical break with most other programming languages). 
+
+Leaving aside lexicographical assignments (i.e. the `<<-` operators) since we have no reason to use them yet; and the left-to-right assignments, since there is no reason to use them at all (not if you want readable code, anyway), the clear winner of our mêlée is `<-` and you are free to forget about the rest. Take care with spacing though!
+
+```{r}
+b<-1  # Sets b to 1
+print(b)
+b <-2  # Sets b to 2
+print(b)
+b<- 3  # Sets b to 3
+print(b)
+b< -4  # Does not set b to 4! Compares whether b is less than -4
+```
+
+This immediately brings us to the next kind of symbol: 
+
+## Relational operators
+
+These are comparisons which always evaluate to either TRUE or FALSE (this is also called a *boolean* value).
+
+```{r}
+c(     # Regarding the use of c, here it is only for visuals and introduced later (see/c above).
+4 > 4, # Greater
+4 < 7,   # Less
+4 >= 4,  # Greater or equal
+3 <= 1,  # Less or equal
+8 == 9,  # Equality
+4 != 5  # Non-equality
+)  
+```
+
+Of course, besides holding a value, variables can also be used in basic arithmetic.
+
+```{r}
+x <- a * b  # Product
+y <- x + a  # Sum
+z <- (x / y) + (147548578 / 306494350)  # Division and addition
+v = 2 ^ z  # Exponentiation
+```
+
+Note that you can also write `**` in place of `^`.^[Curiously enough, this is not noted a single time in the approximately 3500 pages of R documentation.]
+All relational operators can of course also be applied to variables.
+
+```{r}
+c(
+x == 5,  # Checks whether x is equal to 5
+3 * x > 10,  # Checks whether 3x is greater than 10
+y < 11,  # Checks whether y is less than 11
+x != y  # Checks whether x is not equal to y
+)
+```
+
+
+Take note that equality testing is done with *two* equal signs - contrary to how we read this expression in our minds' voices, and can lead to ~~horrible mistakes~~ surprising, quirky behaviour down the line. 
+
+## Boolean operators
+
+*Waiter: "Would you like to have your steak rare, medium, or well-done?" Mathematician: "Yes"*
+
+We can chain together atomic boolean expressions to express more complex logical structures, using the `&&` (and), `||` (or) and `!` (not) operations.
+
+```{r}
+# Remember that x = a * b = 6 and y = x + a = 8
+(x + y > 3) || !((x - y < 2) && (x * 4 - 3 * z != 5)) 
+# First, we check whether x+y >3, which is TRUE
+# Then, x-y<2, which is TRUE
+# Last, x*4 - 3*z is not equal to 5, eg TRUE
+# So we have '(TRUE) or not( TRUE and TRUE)', which means 'TRUE or FALSE', 
+# which ultimately returns TRUE (because "x or y" is only FALSE if x *and* y are both FALSE).
+```
+
+This will become very useful later on. As indicated above, "or" is always a non-exclusive operation:
+
+```{r}
+TRUE || TRUE
+```
+For an exclusive-or (i.e. an either-or), we can use a separate operator:
+
+```{r}
+xor(TRUE, TRUE)
+```
+
+### Task
+
+Using the boolean operators in R, validate the following expression: Suppose we have a variable x, equal to 12. Now check if this variable is divisible 2 and at the same time that x multiply by 2 smaller than x squared, In addition to the previous statement, be sure that x does not equal to 12 or x in addition to 10 is equal to 22. (Hint: the answer to that should be *True*)
+
+## The joys of floating-point numbers*
+
+Imagine you want to measure the amount of water in a beaker, but only have cups of volume 1ml, 10ml, 100ml and 1000ml, without any markings on them. Any rest left which doesn't fill up the 1ml cup will thus be effectively impossible to measure. 
+
+The same problem occurs for computers, which, disappointingly, are still finite.
+
+```{r}
+1 == 1.000000000000001
+1 == 1.0000000000000001
+```
+
+You have to be especially careful when variables have vastly different scales (the numbers below are in exponential notation^[1e0 = 1, 1e-1 = 0.1, 1e-2 = 0.01, etc.]). The output of each of the operations below should be exactly 1.
+
+```{r}
+1e-5  / ((1+1e-5) - 1)
+1e-10 / ((1+1e-10) - 1)
+1e-15 / ((1+1e-15) - 1)
+1e-20 / ((1+1e-20) - 1)
+```
+
+
+## Control flow
+
+As outlined above, in the most basic case, our program is executed line by line. We can manipulate this, however, to include more complex logic into our code.
+
+### Conditional statements
+
+Sometimes, we would like the instructions we execute to depend on certain conditions, whether values are positive or negative, for example. For this purpose, we can use *conditional expressions*. 
+
+```{r}
+a = 4
+if(a < 5){ # Checks whether "a is less than 5" is true
+  print(a) # If that is the case, prints the value of a
+}
+
+b = 5
+if(b < 5){
+  print(b)
+}
+```
+
+Now, after specifying the instructions if a condition is met, we can also give an instruction for when it is not.
+
+```{r}
+if(b < 5){
+  print("b is less than five!")
+}else if(b == 5){
+  print("b is equal five!")
+  }else{
+  print("b is greater than five!")
+}
+```
+
+
+### Loops
+
+Imagine we wanted to either do something over and over again, or do it only slightly differently each time. Much like Bill Murray in Groundhog Day, we would be experiencing a loop.
+
+
+#### For-loops
+
+Imagine, for instance, you wanted to sum all the numbers between 1 and 10000^[And assume that you are not Carl Friedrich Gauss]. Of course, you could type `1 + 2 + 3 + ...`. This, however, would take a lot of time.
+
+Instead, we can use a *for-loop* to *iterate over* (i.e. touch and do something with) all the elements of a list, vector, or other suitable object.
+The first "iterable" we will encounter today is a *range*:
+```{r}
+for(i in 1:5){ # Loops through every number between 1-5. 
+  # For each number, the loop does an operation with this number, in this case, prints it
+  print(i)
+}
+```
+
+We can use 
+
+```{r}
+sum <- 0  # We initialize a variable which will hold our result
+
+for(i in 1:10000){
+  sum <- sum + i  # Each number we touch we now add onto the sum variable
+}
+print(sum) # Note that print(sum) is outside the loop, so this is only executed after the loops has run through
+```
+
+#### While-loops*
+
+Another type of loop is the *while-loop*, which will continuously execute as long as a certain condition is met. What does the following code snippet do?
+
+```{r}
+p = 1
+while(p^2 < 1000){
+  p <- p + 1
+}
+print(p) # 32. Note that 32^2 = 1024 > 1000. Since 31^2 < 1000, the loop is executed one final time, thus increasing p by 1 (to the value of 32). Then, the condition "p^2<1000" is not met anymore and the next command is executed.
+```
+
+
+## Functions
+
+Sometimes, we want to summarize a set of instructions into a single expression. This is called a *function*. A function can be seen as a mechanism acting on a number of input arguments and returning a value or an object (i.e. *something*). The below function will compare the sines of two values, and return the one with the larger sine.
+
+```{r}
+get_bigger_sin <- function(value_1, value_2){ # Takes two input values and prints the one whose sine is bigger
+  sin1 = sin(value_1)
+  sin2 = sin(value_2)
+  
+  if(sin1 > sin2){ # Tests whether sin1 is bigger than sin2. Note that in the case of equality, sin2 is returned (except for numerical instabilities, see above)
+    return(value_1)
+  } else{
+    return(value_2)
+  }
+}
+
+example_function_output <- get_bigger_sin(2, 5) # Note that the return-value of the function (the 'result', 2 in this case) is stored into the variable 'example_function_output'
+print(example_function_output) # Now we print the variable containing the result
+```
+
+Of course, functions can also call each other.
+
+```{r}
+another_function <- function(value){ # Compares sin(value+1) and sin(value-1) and returns the square of the input of the bigger result
+  local_variable_1 <- get_bigger_sin(value-1, value+1) # The return-value of the function 'get_bigger_sin' is stored into a variable
+  return(local_variable_1^2) # Square of the variable is returned
+}
+another_function(7) # sin(8) > sin(6), this means 8^2 is returned
+```
+
+Admittedly, this is a very contrived example, but you shouldn't underestimate the usefulness of functions. Many of your scipts in daily practice will look like the following:
+
+`library(some_useful_package)`
+
+`dataset <- load_data()`
+
+`results <- perform_complicated_analysis(dataset)`
+
+In other words, functions are a way to create structures that are increasingly abstract, and to hide away complicated logic behind clear, easy-to-read expressions to ensure that code remains understandable^[A rule of thumb is that anything which you do more than three times should be its own function].
+
+
+# Tasks
+
+Now, it is time to test your new knowledge! 
+
+1. Since you are, as we established, not Carl-Friedrich Gauss, you may have been bored by your mathematics teachers with the formula that $1 + 2 + 3 + 4 + \ldots + n = \frac{n (n+1)}{2}$, but might not fully trust it. Use R to verify it for all n between 1 and 10000.
+2. An integer is called "prime" if its only divisors are 1 and itself. Implement a function that tests whether a given number is prime. For this, the `%` operator will be useful, which represents the modulus operation; in particular, n is divisible by m if and only if `n % m == 0`.
+
+# --------------------------------------------------------------------
+
+# Data Types
+We want to learn R in order to look at data and analyse it. So first, we have a look which data types R knows, and then we will learn how to combine data in two-dimensional ways. Here, we want to look at what kind of different data types we have, and what we can do with the individual ones.
+One caveat: We talk about the 'class' of an object here. This term is used entirely differently in languages which support object oriented programming, so if you stumble upon that term, don't be confused! 
+
+## Numerics
+The numeric class is what is called a number in common language. Numerics cover all kind of numbers, be it integers or floats. There is a seperate class integer, which is a subset of the numerics class (meaning all integers are also numerics). However, you have to force R to distinguish between integers and numerics.
+
+```{r}
+a <- 3
+class(a)
+pi <- 3.14
+class(pi)
+pi <- as.integer(pi) # cuts off any decimal digits
+print(pi)
+class(pi) # integer is a subset of numeric class
+```
+You can work with numerics just as you would expect, meaning you can perform basic arithmetic (see section *Assignment operators*).
+
+## Characters
+The character class describes a string of characters. A character is always written in quotation marks:
+```{r}
+string <- 'This is a character!'
+class(string)
+stringnumber <- '3.14' # if numbers are in brackets, they are characters as well
+class(stringnumber)
+pi <- as.numeric(stringnumber) # but you can turn them into numerics
+class(pi)
+print(pi) # and it even does what you expect
+```
+To concatenate two or more characters (for example to define a path where a file should be stored), we use the function `paste()`
+
+```{r}
+storage_path <- '/home/user/Documents/R_course'
+filename <- 'R_course.pdf'
+paste(storage_path, filename, sep = '/') # the seperator is how the characters are "glued" together
+```
+
+## logical
+A logical value (also known as boolean value in other languages) is either TRUE or FALSE. This can become handy if you want to test whether something (for example a value) meets a certain condition (see section *boolean operators*).
+
+```{r}
+is.numeric(pi) # checks whether pi is numeric, since we defined it to be 3.14, this is TRUE
+is.numeric(string) # our string is a character, so this returns FALSE
+1 < 2 # returns TRUE
+```
+## Structuring Data
+
+### Vectors and Matrices
+We structure data and variables to get meaning into them. The simplest way to do this is with a *vector*. We write `c()` while the elements are separated by a comma. You can imagine a vector being an ordered, single-dimensional collection of objects from a single type^[even though R will not throw an error if you write `c(0,1,2,'string')`, so take care!]. E.g.
+```{r}
+numeric_vector <- c(0, 1, 2, 3, 4)
+class(numeric_vector)
+length(numeric_vector) # returns number of elements in vector
+numeric_vector[1] # you can access an element of the vector with square brackets, with 1 being the first element
+numeric_vector[2:4] # access some slice of the vector 
+```
+Matrices are basically two-dimensional vectors. Just as vectors, they may only contain a single data type. We can create a matrix with the `matrix()` function
+```{r}
+# creates a matrix from the 1 to 12
+# 3 rows, 4 columns, and by default, entries are written 'top-down', so the columns are filled up first
+column_matrix <- matrix(data = c(1:12), nrow = 3, ncol = 4) 
+# same as above, but entries are written 'left-right', so rows are filled up first
+row_matrix <- matrix(data = c(1:12), nrow = 3, ncol = 4, byrow = TRUE)
+print(column_matrix) # the output already indicates the column / row names
+print(row_matrix)
+```
+We can *subset* matrices with `matrix[row, column]`, meaning we only look at a specific entry, column or row.
+```{r}
+row_matrix[1,2] # First row, second column entry
+row_matrix[,2] # all rows, second column -> 2, 6, 10
+row_matrix[1:2,] # 1st to 2nd row, all columns
+```
+You can do arithmetic operations with matrices, and they work mostly as you would expect. Please refer to the R documentation for further details.
+
+### Data Frames
+Data frames are in R what excel sheets are for humans. They store data in a two-dimensional way, but other than matrices, different data types are allowed in data frames.
+
+We will only briefly cover how to create data frames from scratch, as this can be quite fiddly and most of the times, you will import a csv with your results and work with that anyway.
+```{r}
+names = c('ente', 'duck', 'canard', 'ahiru') # create vectors of the same length
+ages = c(10, 20, 30, 40)
+height = c(1.1, 2.2, 3.3, 4.4)
+layed_eggs = c(TRUE, FALSE, TRUE, FALSE)
+duck_df <- data.frame(names, ages, height, layed_eggs)
+class(duck_df) # class 'data.frame'
+dim(duck_df) # gives the dimension of the data frame. 4 rows, 4 columns in this case
+```
+
+A very handy and important feature about data frames is that you can subset them just like matrices. So you can look at a specific row or column, and ask whether they meet certain conditions.
+```{r}
+duck_df$'names' # subsetting by column with the '4' sign, returns all entries in column 'names'
+duck_df$names # works also when you don't put the column's name into quotation marks
+duck_df[1:2, 2] # returns the 1st until the 2nd row, and of that the 2nd column
+duck_df[1:2, 'ages'] # same as above, but take care that you put the column name in quotation marks!
+duck_df[layed_eggs==TRUE,] # returns all columns of the rows where the entry in column layed_eggs is TRUE
+
+```
+So, this was a small data frame to see how it is principally built up. Now, let's have a look at one of R's already installed data frames:
+```{r}
+titanic_df <- data.frame(Titanic)
+```
+
+R comes with handy functions that makes dealing with data frames easier. To get a first glimpse at a data frame, you may want to look at the head, the tail, or a specific subset.
+
+```{r}
+colnames(titanic_df) # the column names are the characters of the vector names (note that they are in quotation marks!)
+head(titanic_df) # first 6 rows of data frame
+tail(titanic_df) # last 6 rows of data frame
+summary(titanic_df) # automatically calculates mean, median, quantiles, min/max values for numerical columns, gives summery for other types
+```
+Suppose we want to find out more about the female passengers. First, we subset the original data frame to only get the relevant rows
+```{r}
+mask <- titanic_df$Sex=='Female' # returns a logical: for every row, TRUE if entry in column 'Sex' is 'Female', FALSE otherwise
+# please note the double equal sign here, otherwise this will throw an error, and `titanic_df$Sex = 'Female' ` will turn all entries in the 'Sex' column to 'Female' which we want to avoid!
+print(mask)
+females <- titanic_df[mask,] # is the same as titanic_df[Sex=='Female',] but with increased readability!
+class(females) # we get a new data frame with only the entries of the females!
+rownames(females) <- NULL # we want to reset the rownames, otherwise the old row indices will be taken
+
+```
+Now, we can work with our reduced data frame.
+
+```{r}
+females[females$Class=="1st",] # another way to subset the dataset, here, we get every column of 1st class females
+# note that the indices are again messed up
+females_total <- sum(females$Freq) # sums up the whole 'Freq' column
+females_1st <- sum(females[females$Class=="1st",'Freq'])
+females_1st_survived <- sum(females[females$Class=="1st" & females$Survived=="Yes",'Freq']) # get the sum of survived females in 1st class
+print(c(females_total, females_1st, females_1st_survived))
+```
+As you can see, subsetting data frames can get as complicated as you wish. 
+We hope you could get a good first glimpse on how data frames work in R. For more functions that make life with data frames easier, please refer to ...?
+
+# --------------------------------------------------------------------
+
+
+# Import data in R
+
+R is a programming language that is mainly designed for data analysis. Thus, importing data is one of its core features. Importing the data can be done through a set of functions in R to load data sets into memory. In addition to that, you can also load data into memory using R Studio - via the menu items and toolbars or by using the environment panel. Today, we will cover all approaches. 
+
+## Data format
+
+R can load data in different formats, such as: csv, xls, xlsx, sav, dta, por, sas and stata files. 
+
+
+## Importing data in R
+
+The data import menu can be accessed from the environment pane on the right-hand side or from the tools menu under file dropdown list. 
+
+The importers are grouped into 3 categories: Text data, Excel data and statistical data. In this tutorial, we will cover the first two categories. To access this feature, use the "Import Dataset" dropdown from the "Environment" pane.
+
+## Importing data from Text and CSV files
+Importing data "From Text (base)" files allows you to import CSV files and any character delimited files using the base package. This is helpful to preserve compatibility with previous versions of RStudio. 
+
+Let's now try to install a dataset that we want to work with. Just click in the following link to install the dataset (a collection of the COVID-19 data maintained by Our World in Data.) (https://covid.ourworldindata.org/data/owid-covid-data.csv). After installing the data, you can click on the **import Dataset** dropdown list. Then, click on the **from text (base)...**.
+
+
+Importing data "From Text (readr)" files allows you to import CSV files and any character delimited files using the readr package. the readr package provides additional features such as importing dataset using a URL without the need to install the dataset. 
+
+You can try that by click on the **import Dataset** dropdown list, then, click on the **from text (readr)...**. At the top of the popup window, you will find a place where you can insert the file/URL link to the dataset. You can copy and paste the following link: (https://gattonweb.uky.edu/sheather/book/docs/datasets/magazines.csv) and then click on **update**. Once you click on **update** the dataset will be imported into the R environment.
+
+## Importing data from Excel files
+
+let's now try to import this dataset: (https://www.davidzeleny.net/wiki/lib/exe/fetch.php/recol:data:data-for-import.xlsx). This time, we will not use the **import Dataset** dropdown list. instead, we will write the code to import the dataset, which is more convenient in the case when you are writing an R program that needs to be repeated for many different data sets, it might be better to write the loading of data as R program statements. First, we will import the required packages. 
+
+```{r}
+library (readxl)
+url <- 'https://www.davidzeleny.net/wiki/lib/exe/fetch.php/recol:data:data-for-import.xlsx'
+destfile <- tempfile ()
+download.file (url, destfile, mode = 'wb')
+imported_data_excel <- read_excel(destfile, sheet = 'pig')
+```
+
+
+lets now try to plot the x, y coordinate from the data that we just imported:
+```{r}
+plot(imported_data_excel$x,imported_data_excel$y)
+```
+
+
+## Other types of data
+
+To get other types of data into R, you might want to look for the packages listed below. They are a good start. 
+
+For rectangular data:
+
+* **haven** reads SPSS, Stata, and SAS files.
+
+* **DBI**, along with a database specific backend (e.g. RMySQL, RSQLite, RPostgreSQL etc) allows you to run SQL queries against a database and return a data frame.
+
+For hierarchical data: 
+use jsonlite (by Jeroen Ooms) for json, and xml2 for XML. Jenny Bryan has some excellent worked examples at https://jennybc.github.io/purrr-tutorial/.
+
+For other file types, try the R data import/export manual and the **rio** package.
+
+# --------------------------------------------------------------------
+
+# Export data in R
+
+In this section, we will cover how can we export data in the R environment to different formats. The purpose of exporting data is that during the R session, all data in the current session is saved in the main memory. Thus, once the session is closed, all data in the environment will be reset. Thus, one might need to save data into the hard drive for permanent save.
+
+In this session, we will cover exporting data into these formats:
+
+Secondly, R allows the users to export the data into different types of files. We cover the essential file's extension:
+
+* Export the full workspace
+* txt
+* csv
+
+## Export the full workspace
+
+In R, you can export the full workspace from R with the save.image function. Before that, let's specify a location to where we want to export our data to:
+```{r}
+path="/home/emad/Documents/" #make sure to change this directory to specific one in your computer
+```
+
+Note that the output file will be of type **RData**. This can be Done as follow:
+
+```{r}
+# Export all elements in the current workspace (the workspace image)
+save.image(file = paste(path,"R_objects.RData", sep=""))
+```
+
+To export only specific elements from the current workspace, you can do as follow:
+
+```{r}
+# Export some R objects
+save(imported_data_excel, file = paste(path,"one_element.RData", sep=""))
+```
+
+To load the workspace, use the **load** function:
+
+```{r}
+# Export some R objects
+load(file = paste(path,"one_element.RData", sep=""))
+```
+
+## Export to a txt file
+
+While **.RData** files are great for saving R objects, sometimes you’ll want to export data (usually dataframes) as a simple .txt file that other programs, like Excel, can read and work with. To do so, we need to use the **write.table()** function in R.
+
+Let's create a table first:
+
+```{r}
+table1 <- matrix(c(10,4,14,6,12,8,20,4,3,8,11,-5,15,12,28,3),ncol=4,byrow=TRUE)
+colnames(table1) <- c("A","B","A+B","A-B")
+table1 <- as.table(table1)
+```
+
+Now, let's try to save that table into a text file by using the **write.table()** function:
+
+```{r}
+write.table(x = table1,
+            file = paste(path,"table.txt", sep=""),  # Save the file as table.txt
+            sep = "\t")            # Make the columns tab-delimited
+
+```
+
+## Export to a CSV file
+
+In R, you can also write your dataset into CSV format directly. This can be done by using the **write.csv()**. Let's now try to save our table that we create in the previous section, **table1** into a CSV file:
+
+```{r}
+write.csv(table1, paste(path,"table.csv", sep=""))
+```
+
+Just to mention that R can also store data into other formats like:
+
+* xlsx
+* RDS
+* SAS
+* SPSS
+* STATA
+
+# --------------------------------------------------------------------
+
+# Plotting in R
+
+In this section, we will learn how to use the plot function in R. It is used to make graphs according to the type of object passed.
+
+The most used plotting function in R programming is the **plot()** function. We can pass to it a vector and then we can obtain a scatter plot of magnitude vs index. But generally, we pass in two vectors and a scatter plot of these points is plotted. Let's try to plot two vectors using the above function:
+
+```{r}
+plot(c(1,2),c(3,5))
+```
+
+Let's have another example where we plot a sine function from range -pi to pi:
+
+```{r}
+x <- seq(-pi,pi,0.1)
+plot(x, sin(x))
+```
+
+That plot seems nice. However, let's make it nicer. We can do that by using some of the argument from the **plot()** function:
+
+```{r}
+plot(x, sin(x),
+main="The Sine Function",
+ylab="sin(x)",
+type="l", # l for line. you can also try "b", "c", "o"
+col="blue")
+```
+
+Same plot can be plotted using the **barplot()** function:
+
+```{r}
+x <- seq(-pi,pi,0.1)
+barplot( sin(x))
+```
+
+Let's now plot the sin(x) and cos(x) on the same plot and add legend to the plot to distinguish between the two lines:
+
+```{r}
+plot(x, sin(x),
+ylab="f(x)",
+type="l", # l for line. you can also try "b", "c", "o"
+col="blue")
+
+lines(x, cos(x),
+type="l", # l for line. you can also try "b", "c", "o"
+col="red")
+
+legend(2,1,c("sin(x)","cos(x)"), lwd=c(2,2), col=c("blue","red"))
+
+```
+
+legend is a function in R that can takes many arguments **legend(x, y=NULL, legend, fill, col, bg)**:
+
+* x and y : the x and y co-ordinates to be used to position the legend
+* legend : the text of the legend
+* fill : colors to use for filling the boxes beside the legend text
+* col : colors of lines and points beside the legend text
+* bg : the background color for the legend box.
+
+## Save a Plot to an Image File
+
+To save a plot to an image file with a specific format, you have to do three things in sequence as follow:
+
+* Call a function to open a new graphics file, such as png(), jpg() or pdf(), etc.
+* Call plot() to generate the plot of interest.
+* Call dev.off() to close the graphics file.
+
+```{r}
+png(filename= paste(path,"myPlot.png", sep=""), width=648, height=432)
+
+plot(x, sin(x),
+ylab="f(x)",
+type="l", # l for line. you can also try "b", "c", "o"
+col="blue")
+
+lines(x, cos(x),
+type="l", # l for line. you can also try "b", "c", "o"
+col="red")
+
+legend(2,1,c("sin(x)","cos(x)"), lwd=c(2,2), col=c("blue","red"))
+
+dev.off()
+```
+
+# Task 
+
+* Let's now try to use a dataset that already exist in R called **mtcars** and try to plot/apply some visulization routine on it. To load the dataset run the following code line 
+
+```{r}
+data(mtcars)
+```
+
+* Now, try to create a scatter plot for the mpg and drat column. 
+  * Rename the x and y axis to a proper ones.
+* Change type of visualization of our scatterplot in Exercise 1 to see line instead of dots.
+* Now we want to see both point and lines in our plot.
+* Make a new graph that produce a histogram with using the gear column. (hint: use the **hist()** function)
+
+# --------------------------------------------------------------------
+
+# Descriptive Statistics
+
+Since R is designed and used by statisticians, it has a very powerful ecosystem dedicated to statistical modelling.
+Here we will only give a short introduction on how to compute basic descriptive statistics of a dataset.
+
+## Load a dataset
+We will use the default `mtcars` dataset (Motor Trend Car Road Tests), which was retrieved from the 1974 Motor Trend US Magazine.
+The dataset can be displayed with
+
+```{r}
+mtcars
+```
+
+and a full description of the meaning of its columns can be retrieved with `?mtcars`.
+
+The following functions can be used to access the dataset components
+
+```{r}
+# Dimension of the data set (rows, columns)
+dim(mtcars)
+```
+
+```{r}
+# Names of the variables (columns)
+names(mtcars)
+```
+
+```{r}
+# Names of the rows
+rownames(mtcars)
+```
+
+```{r}
+# Access all values of a given variable
+mtcars$cyl
+```
+
+## Descriptive statistics
+
+A summary containing standard descriptive statistics for each variable can be obtained by
+```{r}
+summary(mtcars)
+```
+
+Maximum/minimum/mean/median can be obtained directly by the `max()`, `min()`, `mean()` and `median()` functions respectively.
+Note that R has no built-in function to compute the mode!
+```{r}
+min(mtcars$mpg)
+max(mtcars$mpg)
+mean(mtcars$mpg)
+median(mtcars$hp)
+```
+
+To obtain the index of the row at which the minimum/maximum is achieved use `which.min()`/`which.max()`.
+For example, the following will print the names of the least/most fuel-efficient cars.
+```{r}
+# Least fuel-efficient
+rownames(mtcars)[which.min(mtcars$mpg)]
+# Most fuel-efficient
+rownames(mtcars)[which.max(mtcars$mpg)]
+```
+
+To obtain the quartiles of the empirical distribution of a given vector, just run
+```{r}
+quantile(mtcars$wt)
+```
+If specific quantiles are needed instead, they can be specified as a vector
+```{r}
+quantile(mtcars$wt, c(0.05, 0.95))
+```
+
+## Empirical distributions
+
+The empirical distribution of a data set assigns to each observed value a probability equal to the frequency at which it has been observed. By construction, it is always a discrete probability distribution. For example, if we observed the values $1, 4, 5, 1, 4, 4, 2$ then the empirical distribution would assign probability $2 / 7$ to the value $1$, probability $1/7$ to the values $2$ and $5$, probability $3/7$ to the value $4$ and no probability mass to all other values.
+
+The empirical cumulative distribution function can be similarly constructed: it is a function that, starting from zero, increases by the probability mass define as above each time it crosses one of the observed values, until it reaches one. It can be computed with `ecdf()` in R.
+```{r}
+plot(ecdf(mtcars$cyl), do.points=FALSE, verticals=TRUE)
+```
+
+This works well when the data can only take a finite number of possible values, as the "cylinder" variable does in the above example. However, if the data can be an arbitrary real number (such as fuel-efficiency in the `mtcars` data set), then it will be highly unlikely that the same value occurs more than once in the data set and all values will consequently have the same probability mass! The ECDF still looks somewhat nice and useful, but it is not clear how to assign meaningful probability values to single observations. 
+```{r}
+plot(ecdf(mtcars$mpg), do.points=FALSE, verticals=TRUE)
+```
+
+A possible solution is to partition the set of possible values into a discrete number of non-overlapping subsets (such that observations falling in the same subset can be considered sufficiently similar to one another), substitute the observed values with the subset they belong to and then compute the empirical distribution. For example, if the possible range of values is the interval $[0,1]$ we could partition it into 4 sub-intervals $[0, 0.25]$, $[0.25, 0.5]$, $[0.5, 0.75]$ and $[0.75, 1]$, assigning every observation to one and only one of them. This process is called *binning* and can be done manually or automatically (note that the bins must not necessarily be of the same size). In R we can easily create a histogram to visualize a binned empirical distribution with `hist()` (by default, the bin widths are automatically estimated).
+```{r}
+# For each bin, plot the number of observation it contains
+hist(mtcars$mpg, freq=TRUE)
+```
+```{r}
+# For each bin, plot its probability mass:
+# the area of the bar is equal to (bin size) x (number of observations in the bin),
+# scaled by a factor that makes to sum of all bin areas equal to one.
+hist(mtcars$mpg, freq=FALSE)
+```
+
+Instead of using binning and plotting a histogram, there are methods to directly approximate the continuous probability density of the data. Such approximation has the advantage of being defined at every point of the support and of varying smoothly. The amount of smoothing applying (called *bandwith*) can be specified by the user or auto-detected. This procedure is called Kernel Density Estimation (KDE) and can be invoked in R with the `density()` function (consult <https://en.wikipedia.org/wiki/Kernel_density_estimation> for more details).
+```{r}
+hist(mtcars$mpg, freq=FALSE) # The histogram must represent probabilities to make it comparable to the KDE
+lines(density(mtcars$mpg, bw="SJ")) # bw -> bandwidth estimation method
+```
+
+As a final example, a quantile-quantile plot (Q-Q plot, <https://en.wikipedia.org/wiki/Q%E2%80%93Q_plot>) can be used to compare the empirical distribution with a standard distribution. It plots the quantiles of one distribution against the quantiles of the other. If the two distributions have the same shape, then the quantiles will lie on a single line. The more they deviate from such a line the more the two distributions differ. Q-Q plots are a very useful graphical way to quickly compare distributions. In the case a normal distribution is used for the comparison, the convenient shorthand `qqnorm()` can be used.
+```{r}
+qqnorm(mtcars$mpg)
+qqline(mtcars$mpg) # Show equal distributions case for making comparison clearer
+```
+
+## Linear regression
+
+R makes it easier to fit models to the data.
+As a simple example, suppose we want to find if there is a linear relationship between fuel efficiency and car weight.
+This can achieved by
+```{r}
+attach(mtcars) # make the variables from the data set available without the need for $
+relationship <- lm(mpg ~ wt) # fit a linear model mpg = a * wt + b
+wt_unknown <- seq(1, 6, 0.1) # weights of cars for which fuel efficiency is unknown
+mpg_predicted <- predict(relationship, data.frame(wt=wt_unknown)) # predicted fuel efficiency
+plot(wt, mpg) # plot data
+lines(wt_unknown, mpg_predicted) # plot model prediction
+```
+
+More complex models can be used with the same general interface, such as `y ~ x1 + x2` for multiple regression.
+
+# --------------------------------------------------------------------
+
+# Packages
+
+All  R  functions  and  data sets  are  stored  in packages and 
+they become available only when the package containing them is loaded.
+Such an approach limits memory usage since code is loaded only when it is needed
+and also helps performance since the R executable has to search a smaller list
+for the functions requested by the user.
+Moreover, compartmentalizing the code allows package developers not to worry
+about name clashes with variables defined by other packages and/or the user.
+
+All installations of R includes a default set of packages,
+some of which are automatically loaded when the R console starts.
+More packages designed for specific purposes can be installed, and then loaded, by the user.
+The central repository for R packages is located at <https://cran.r-project.org/web/packages/available_packages_by_name.html>.
+
+## Basics
+
+The packages installed on a particular system can be listed by running
+
+```{r, eval=FALSE}
+library()
+```
+
+while the listed of currently loaded (attached) packages can be obtained with
+
+```{r, eval=FALSE}
+search()
+```
+
+In general, only packages explicitly loaded by the user are returned by `search()`
+and not packages loaded as a dependencies of other packages.
+
+New packages can be easily installed from CRAN with
+
+```{r eval=FALSE}
+install.packages("PackageName")
+```
+
+and all installed packages can be updated to the latest version by running
+
+```{r, eval=FALSE}
+update.packages()
+```
+
+Finally, a package can be loaded, making its code and data available to the user, by executing
+
+```{r, eval=FALSE}
+library(PackageName)
+```
+
+## Namespaces
+
+Function and data names are organized in *namespaces*,
+which allow package writers to specify the subset of names that are going to be available to the user
+when they load the package, thus separating the user-facing interface from the internals of the package implementation.
+
+A problem may arise when different packages export functions with the same name.
+In that case the version from the most recently loaded package is used by default.
+If one wants to access the version of the function defined in a specific package, they can use the following syntax
+
+```{r, eval=FALSE}
+PackageName::FunctionName
+```
+
+In the event that a function from the base installation of R is overridden by a package,
+the syntax is
+
+```{r, eval=FALSE}
+base::FunctionName
+```
+
+# --------------------------------------------------------------------
+
+# Example
+
+Here we will briefly introduce examplary the differential expression analysis of the package`edgeR`.
+More toolboxes and use cases are mentioned in the lecture slides.
+
+First we install the package by running
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("edgeR")
+```
+
+Then we load the package
+```{r}
+library(edgeR)
+```
+and open the user guide. 
+
+```{r}
+edgeRUsersGuide()
+```
+The guide's descriptions are rather comprehensive and include a case study in the end. A smaller walkthrough can be found e.g. [here](https://bioinformatics-core-shared-training.github.io/cruk-bioinf-sschool/Day3/rnaSeq_DE.pdf) and more analysis walkthroughs [here](https://bioinformatics-core-shared-training.github.io/cruk-bioinf-sschool/).
+
+We will now go through a simple example ourselves. Note that
+
+> edgeR works on a table of integer read counts, with rows corresponding to genes and columns
+to independent libraries.
+
+For possibilities to obtain such a count matrix from other formats or data check section 2.3 of the guide.
+
+## Example from database internship
+
+Recall the dataset GDS1514 (Interferon-gamma tolerogenic effect on CD8+ dendritic cells) from the database internship.
+We will now access it directly in R with the package `GEOquery` (another option would be e.g. downloading the SOFT file from GEO's web page and making a TSV-file from it by deleting unnecessary information). 
+First we install the package with
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("GEOquery")
+```
+
+Detailed instructions for this package can be found in its [manual](https://bioconductor.org/packages/release/bioc/vignettes/GEOquery/inst/doc/GEOquery.html).
+
+After loading the package with
+```{r}
+library(GEOquery)
+```
+we download the dataset into R with
+```{r}
+gds <- getGEO("GDS1514")
+```
+Now we can access the (head of) meta data via
+```{r}
+head(Meta(gds))
+```
+Now we check if the data is loaded correctly
+```{r}
+Table(gds)[1:5,]
+```
+and the columns
+```{r}
+Columns(gds)
+```
+
+Now we will transform the dataframe to a DGElist object which will be used for further analysis
+```{r}
+dgList <- DGEList(counts=(Table(gds)[,3:10]), genes=(Table(gds)[,2]))
+```
+
+We now want to filter out genes which have less than 1 counts per million (cpm). For this we first check the data with the summary function
+
+```{r}
+countsPerMillion <- cpm(dgList)
+summary(countsPerMillion)
+```
+Since the minimum cpm for each sample is larger than 1 we can skip the filtering in our case. If we needed it, it would be done with the following lines of code
+```{r}
+countCheck <- countsPerMillion > 1
+head(countCheck)
+keep <- which(rowSums(countCheck) >= 2)
+dgList <- dgList[keep,]
+summary(cpm(dgList))
+```
+Normalization is now performed with `edgeR`'s implementation trimmed mean of M-values (TMM) method and make a PCA plot of the samples
+
+```{r}
+?calcNormFactors
+dgList <- calcNormFactors(dgList, method="TMM")
+plotMDS(dgList, gene.selection="common")
+```
+Comparing this to the columns' meta data above we can see that replicates with same age and (un-)treated condition group quite nicely. Now we have to set up the model design and fit the model (check the guide e.g. section 2.3.10 for more details).
+
+```{r}
+group <- factor(c(1,1,2,2,3,3,4,4)) # these are the different sample groups
+design <- model.matrix(~group)
+dgList <- estimateDisp(dgList, design)
+fit <- glmQLFit(dgList, design)
+```
+Now we can check the results e.g. 2 vs 1, i.e. 16h untreated vs 4h untreated
+```{r}
+qlf.2vs1 <- glmQLFTest(fit, coef=2)
+topTags(qlf.2vs1)
+```
+and 3 vs 1, i.e. treated 4h vs untreated 4h
+
+```{r}
+qlf.3vs1 <- glmQLFTest(fit, coef=3)
+topTags(qlf.3vs1)
+```
+
+## Task
+
+Use the above pipeline now for the GDS1113 data set from the internship and compare to the results obtained from web browser.
