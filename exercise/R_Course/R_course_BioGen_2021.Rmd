@@ -141,7 +141,12 @@ xor(TRUE, TRUE)
 
 ### Task
 
-Using the boolean operators in R, validate the following expression: Suppose we have a variable x, equal to 12. Now check if this variable is divisible 2 and at the same time that x multiply by 2 smaller than x squared, In addition to the previous statement, be sure that x does not equal to 12 or x in addition to 10 is equal to 22. (Hint: the answer to that should be *True*)
+Using the boolean operators in R, validate the following expression: Suppose we have a variable `x`, equal to 12. Now check if this variable is divisible by 2 and at the same time `x` multiplied by 2 is smaller than `x` squared. In addition to the previous statement, be sure that `x` is not equal to 12 or `x` plus 10 is equal to 22. (Hint: the answer to that should be *true*)
+
+```{r}
+x <- 12
+(x %% 2 == 0) && (2*x < x^2) && ((x != 12) || (x + 10 == 22))
+```
 
 ## The joys of floating-point numbers*
 
@@ -285,7 +290,64 @@ In other words, functions are a way to create structures that are increasingly a
 Now, it is time to test your new knowledge! 
 
 1. Since you are, as we established, not Carl-Friedrich Gauss, you may have been bored by your mathematics teachers with the formula that $1 + 2 + 3 + 4 + \ldots + n = \frac{n (n+1)}{2}$, but might not fully trust it. Use R to verify it for all n between 1 and 10000.
-2. An integer is called "prime" if its only divisors are 1 and itself. Implement a function that tests whether a given number is prime. For this, the `%` operator will be useful, which represents the modulus operation; in particular, n is divisible by m if and only if `n % m == 0`.
+
+```{r}
+sum_naive <- function(n){
+  sum = 0
+  for(i in 1:n){
+    sum <- sum + i
+  }
+  return(sum)
+}
+
+sum_gauss <- function(n){
+  return(n * (n + 1) / 2)
+}
+
+check <- function(){
+  for(n in 1:10000){
+    if(sum_naive(n) != sum_gauss(n)){
+      return(FALSE)
+      # As soon as the formulas do not coincide for a single value of n, the test is failed
+    }
+  }
+  return(TRUE)
+}
+
+check()
+```
+
+2. An integer is called "prime" if its only divisors are 1 and itself. Implement a function that tests whether a given number is prime. For this, the `%%` operator will be useful, which represents the modulus operation; in particular, `n` is divisible by `m` if and only if `n %% m == 0`.
+
+```{r}
+is.divisible <- function(n, m){
+  return(n %% m == 0)
+}
+
+is.prime <- function(n){
+  if(n <= 1) return(FALSE) # 0 and 1 are not prime
+  else if(n == 2) return(TRUE) # 2 is prime but not covered by the general case
+  else{
+    for(m in 2:(n-1)){ # NB 2:n-1 is something different: parentheses are needed here!
+      if(is.divisible(n, m)){
+        return(FALSE) # As soon as n has one divisors, we know it is not prime
+      }
+    }
+    return(TRUE)
+  }
+}
+
+# Print the first 10 prime numbers to be sure the function works
+n <- 0
+count <- 0
+while(count < 10){
+  if(is.prime(n)){
+    print(n)
+    count <- count + 1
+  }
+  n <- n + 1
+}
+```
 
 # --------------------------------------------------------------------
 
