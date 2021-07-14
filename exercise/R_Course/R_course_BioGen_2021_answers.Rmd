@@ -1011,3 +1011,65 @@ topTags(qlf.3vs1)
 ## Task
 
 Use the above pipeline now for the GDS1113 data set from the internship and compare to the results obtained from web browser.
+
+## Solution
+
+we download the dataset into R with
+```{r}
+gds <- getGEO("GDS1113")
+```
+Now we can access the (head of) meta data via
+```{r}
+head(Meta(gds))
+```
+Now we check if the data is loaded correctly
+```{r}
+Table(gds)[1:5,]
+```
+and the columns
+```{r}
+Columns(gds)
+```
+
+Now we will transform the dataframe to a DGElist object which will be used for further analysis
+```{r}
+dgList <- DGEList(counts=(Table(gds)[,3:6]), genes=(Table(gds)[,2]))
+```
+
+We now want to filter out genes which have less than 1 counts per million (cpm). For this we first check the data with the summary function
+
+```{r}
+countsPerMillion <- cpm(dgList)
+summary(countsPerMillion)
+```
+Since the minimum cpm for some samples is larger than 1 we apply the filtering now with the following lines of code
+```{r}
+countCheck <- countsPerMillion > 1
+head(countCheck)
+keep <- which(rowSums(countCheck) >= 2)
+dgList <- dgList[keep,]
+summary(cpm(dgList))
+```
+Normalization is now performed with `edgeR`'s implementation trimmed mean of M-values (TMM) method and make a PCA plot of the samples
+
+```{r}
+?calcNormFactors
+dgList <- calcNormFactors(dgList, method="TMM")
+plotMDS(dgList, gene.selection="common")
+```
+Comparing this to the columns' meta data above we can see that the Foxp3 knock-in samples group quite well, while the control samples are bit more scattered through the reduced space.
+
+```{r}
+group <- factor(c(1,1,2,2)) # these are the different sample groups
+design <- model.matrix(~group)
+dgList <- estimateDisp(dgList, design)
+fit <- glmQLFit(dgList, design)
+```
+Now we can check the results
+```{r}
+qlf.2vs1 <- glmQLFTest(fit, coef=1)
+topTags(qlf.2vs1)
+```
+```{r}
+qlf.2vs1
+```
