@@ -658,9 +658,39 @@ data(mtcars)
 
 * Now, try to create a scatter plot for the mpg and drat column. 
   * Rename the x and y axis to a proper ones.
+  
+```{r}
+  plot(mtcars$mpg,mtcars$drat,
+       xlab = "Miles/(US) gallon",
+       ylab="Rear axle ratio",
+)
+```
 * Change type of visualization of our scatterplot in Exercise 1 to see line instead of dots.
+
+```{r}
+  plot(mtcars$mpg,mtcars$drat,
+       xlab = "Miles/(US) gallon",
+       ylab="Rear axle ratio",
+       type="l",
+)
+```
+
 * Now we want to see both point and lines in our plot.
+
+
+```{r}
+  plot(mtcars$mpg,mtcars$drat,
+       xlab = "Miles/(US) gallon",
+       ylab="Rear axle ratio",
+       type="b",
+)
+```
+
 * Make a new graph that produce a histogram with using the gear column. (hint: use the **hist()** function)
+
+```{r}
+hist(mtcars$gear)
+```
 
 # --------------------------------------------------------------------
 
