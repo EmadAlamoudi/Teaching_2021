@@ -1070,6 +1070,3 @@ Now we can check the results
 qlf.2vs1 <- glmQLFTest(fit, coef=1)
 topTags(qlf.2vs1)
 ```
-```{r}
-qlf.2vs1
-```
